@@ -59,7 +59,7 @@ discover() {
 		id="$(tty_usb_id "$t")" || continue
 		if [ "$id" = "$PRIME_ID" ]; then
 			CANDIDATES+=("tescom_prime|$DEV/$t||")
-			log "found $id on $DEV/$t: Tescom Prime (tescom_prime)"
+			log "found a Tescom Prime on $DEV/$t"
 		fi
 	done
 	for d in "$SYSFS"/bus/usb/devices/*; do

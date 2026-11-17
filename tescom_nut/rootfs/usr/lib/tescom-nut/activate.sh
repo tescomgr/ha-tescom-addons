@@ -140,7 +140,7 @@ bin="$DATA/drivers/$ARCH/tescom_prime"
 have=""
 [ -f "$bin" ] && have="$(sha256sum "$bin" | cut -d' ' -f1)"
 if [ "$have" != "$sha" ]; then
-	log "Downloading the tescom_prime driver for $ARCH"
+	log "Downloading the Tescom Prime driver for $ARCH"
 	set +e
 	code="$(curl -sS -m 120 -H "Authorization: Bearer $token" -o "$bin.part" -w '%{http_code}' \
 		"$CLOUD/addon/drivers/tescom_prime?arch=$ARCH" 2>/dev/null)"

@@ -29,13 +29,11 @@ The add-on's [documentation](tescom_nut/DOCS.md) has the details.
 Do not run this add-on and the community NUT add-on on the same UPS: only one
 of them can open its port.
 
-## Why not the community NUT add-on?
+## Tescom Prime
 
-The Tescom Prime's USB port is a CH340 USB-serial chip (`1a86:7523`) that
-stock NUT cannot read (`nutdrv_qx` gets `read: timeout`). Its driver,
-`tescom_prime`, is Tescom's own and is not in this repository: the add-on
-downloads it from Tescom Connect once the UPS is activated with its myTescom
-code ([docs/CLOUD-API.md](docs/CLOUD-API.md)).
+The Tescom Prime needs Tescom's own driver, which is not in this repository:
+the add-on downloads it from Tescom Connect once the UPS is activated with its
+myTescom code ([docs/CLOUD-API.md](docs/CLOUD-API.md)).
 
 ## Building locally
 

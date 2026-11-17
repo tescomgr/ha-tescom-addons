@@ -1,19 +1,16 @@
 # Tescom NUT
 
-Network UPS Tools (NUT) 2.8.4 for Home Assistant, with Tescom's own drivers:
+Shows your Tescom UPS in Home Assistant: plug its USB cable into the Home
+Assistant machine and the add-on finds it. Works with:
 
-- `tescom_prime` for the **Tescom Prime** series, once the UPS is registered
-  on myTescom (see below). The Prime's USB port is a serial port (a CH340
-  chip, USB ID `1a86:7523`, `/dev/ttyUSB0`) that stock NUT drivers cannot
-  read: the community NUT add-on only gets `read: timeout` from it.
-- `nutdrv_qx_mec` for the **Tescom LiON RT** (nutdrv_qx with a fix for its
-  USB bridge).
-- `nutdrv_qx` with the quick battery test added for the **Tescom Leo
-  SmartBox** (hunnox subdriver), which stock NUT lacks.
-- The stock `usbhid-ups`, `blazer_usb` and `blazer_ser` for other UPSs.
+- **Tescom Prime** series, once the UPS is registered on myTescom (see
+  below).
+- **Tescom LiON RT**.
+- **Tescom Leo SmartBox**, including its quick battery test.
+- Most other USB UPSs (APC, Eaton, CyberPower and others).
 
-The add-on runs the driver and the NUT server (`upsd`) on port 3493. Home
-Assistant's built-in **Network UPS Tools** integration reads the UPS from it.
+Home Assistant's built-in **Network UPS Tools** integration then shows the
+UPS's status, battery and load, and can run its tests.
 
 ## Installation
 
@@ -30,9 +27,9 @@ Assistant's built-in **Network UPS Tools** integration reads the UPS from it.
 6. Start the add-on and check its log:
 
    ```text
-   [tescom-nut] found 1a86:7523 on /dev/ttyUSB0: Tescom Prime (tescom_prime)
+   [tescom-nut] found a Tescom Prime on /dev/ttyUSB0
    [tescom-nut] UPS ups: activated (serial ..., Prime 1102 XL)
-   [tescom-nut] Downloading the tescom_prime driver for aarch64
+   [tescom-nut] Downloading the Tescom Prime driver for aarch64
    ```
 
 7. Settings > Devices & services: Home Assistant shows **Network UPS Tools

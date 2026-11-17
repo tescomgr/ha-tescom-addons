@@ -5,8 +5,7 @@ configuration:
     description: >-
       Τα UPS που εξυπηρετεί. Το καθένα θέλει ένα όνομα (γράμματα, ψηφία, _ . -).
       Αφήστε κενά τον οδηγό (driver) και τη θύρα (port) για αυτόματη
-      αναγνώριση: ένα Tescom Prime στο USB παίρνει tescom_prime, τα άλλα UPS
-      στο USB usbhid-ups ή nutdrv_qx. Ένα Tescom Prime θέλει επίσης τον
+      αναγνώριση του UPS στο USB. Ένα Tescom Prime θέλει επίσης τον
       σειριακό αριθμό του και τον κωδικό ενεργοποίησης από τη σελίδα του στο
       myTescom (my.tescom.gr). Στο config μπαίνουν επιπλέον γραμμές του
       ups.conf, π.χ. "lowbatt = 30".
