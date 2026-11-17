@@ -10,7 +10,6 @@ arch:
   - amd64
 init: false
 startup: system
-boot: auto
 uart: true
 usb: true
 hassio_api: true
