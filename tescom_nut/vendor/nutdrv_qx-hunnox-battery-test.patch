@@ -1,0 +1,23 @@
+nutdrv_qx, hunnox subdriver: the battery test.
+
+NUT's hunnox table has no T, so test.battery.start.quick fails ("FAILED")
+on the Tescom Leo SmartBox (MEC0003 bridge, hunnox). Probed on the real UPS
+on 2026-11-15: string index 0x04 (krauler's
+"T") runs a real battery test of about 7 s: Q1 shows utility fail and test
+in progress, the inverter carries the load (230 V), the battery goes
+13.7 -> 13.4 V, then back to mains. 0x05 (TL, deep test) did nothing, so it
+is left out. The megatec table sends the quick test as "T\r".
+
+Applied to NUT 2.8.4 before it is built (scripts/build-nut.sh), so the
+bundled nutdrv_qx has it; nutdrv_qx_mec is built from the same source.
+
+--- a/drivers/nutdrv_qx.c
++++ b/drivers/nutdrv_qx.c
+@@ -1293,6 +1293,7 @@
+ 		{ "I\r",	0x0c, },	/* Vendor infos */
+ 		{ "Q\r",	0x07, },	/* Beeper toggle */
+ 		{ "C\r",	0x0a, },	/* Cancel shutdown/Load on [0x(0..F)A]*/
++		{ "T\r",	0x04, },	/* Battery test, ~7 s (Tescom Leo SmartBox, 2026-11-15) */
+ 		{ NULL, 0 }
+ 	};
+ 	int	i, ret, index = 0;

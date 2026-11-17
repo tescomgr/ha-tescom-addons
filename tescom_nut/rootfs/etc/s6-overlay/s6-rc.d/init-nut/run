@@ -1,0 +1,18 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# Write NUT's configuration from the add-on options, then activate any
+# Tescom Prime and fetch its driver from Tescom Connect.
+bashio::log.info "Writing the NUT configuration"
+mkdir -p /run/nut /etc/nut
+chmod 0770 /run/nut
+if ! /usr/lib/tescom-nut/genconf.sh /data/options.json /etc/nut; then
+    bashio::exit.nok "Could not write the NUT configuration; see the lines above"
+fi
+ADDON_VERSION="$(bashio::app.version 2>/dev/null || echo unknown)" \
+    /usr/lib/tescom-nut/activate.sh /data/options.json /etc/nut /data \
+    || bashio::log.warning "Activation stopped early; see the lines above"
+if ! grep -qE '^\[.+\]$' /etc/nut/ups.conf; then
+    bashio::exit.nok "No UPS left to serve; see the lines above"
+fi
+bashio::log.info "NUT $(cat /usr/lib/nut/NUT_VERSION), devices:"
+grep -vE '^(#|$)' /etc/nut/ups.conf | sed 's/^/    /' >&2

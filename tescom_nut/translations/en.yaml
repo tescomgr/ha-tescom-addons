@@ -1,0 +1,25 @@
+---
+configuration:
+  devices:
+    name: Devices
+    description: >-
+      The UPSs to serve. Each needs a name (letters, digits, _ . -). Leave the
+      driver and port blank to detect them: a Tescom Prime on USB gets
+      tescom_prime, other USB UPSs usbhid-ups or nutdrv_qx. A Tescom Prime
+      also needs its serial number and the activation code from its page on
+      myTescom (my.tescom.gr). Config takes extra ups.conf lines such as
+      "lowbatt = 30".
+  cloud_url:
+    name: Tescom Connect address
+    description: For testing only. Leave it empty.
+  username:
+    name: Username
+    description: The NUT user Home Assistant signs in with.
+  password:
+    name: Password
+    description: The NUT user's password. Required.
+  log_level:
+    name: Log level
+    description: debug or trace also run the drivers and upsd with debug output.
+network:
+  3493/tcp: NUT server (upsd)

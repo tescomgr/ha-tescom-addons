@@ -1,0 +1,45 @@
+# https://developers.home-assistant.io/docs/add-ons/configuration
+name: Tescom NUT
+version: "2.8.4-1"
+slug: tescom_nut
+description: Network UPS Tools for Tescom UPSs on USB (Prime, LiON RT, Leo, others)
+url: "https://github.com/tescomgr/ha-tescom-addons/tree/main/tescom_nut"
+image: "ghcr.io/tescomgr/tescom-nut"
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: system
+boot: auto
+uart: true
+usb: true
+hassio_api: true
+discovery:
+  - nut
+ports:
+  3493/tcp: 3493
+ports_description:
+  3493/tcp: NUT server (upsd)
+options:
+  devices:
+    - name: ups
+      driver: ""
+      port: ""
+      serial: ""
+      activation_code: ""
+      config: []
+  username: homeassistant
+  password: ""
+schema:
+  devices:
+    - name: match(^[A-Za-z0-9_.-]+$)
+      driver: str?
+      port: str?
+      serial: str?
+      activation_code: str?
+      config:
+        - str?
+  username: match(^[A-Za-z0-9_.-]+$)
+  password: password
+  log_level: list(trace|debug|info|notice|warning|error|fatal)?
+  cloud_url: url?

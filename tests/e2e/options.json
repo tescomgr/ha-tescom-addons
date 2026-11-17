@@ -1,0 +1,1 @@
+{"devices":[{"name":"prime","driver":"tescom_prime","port":"/dev/ttyFAKE","serial":"PRIME0001","activation_code":"123456","config":[]}],"username":"homeassistant","password":"secret","log_level":"info","cloud_url":"http://mockcloud:8080/v1"}

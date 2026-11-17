@@ -1,0 +1,12 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# The NUT server, in the foreground, on port 3493.
+bashio::log.info "Starting upsd"
+debug=()
+if bashio::config.has_value 'log_level'; then
+    case "$(bashio::config 'log_level')" in
+        trace) debug=(-D -D -D) ;;
+        debug) debug=(-D) ;;
+    esac
+fi
+exec upsd -F "${debug[@]}"

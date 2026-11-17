@@ -1,0 +1,26 @@
+---
+configuration:
+  devices:
+    name: Συσκευές
+    description: >-
+      Τα UPS που εξυπηρετεί. Το καθένα θέλει ένα όνομα (γράμματα, ψηφία, _ . -).
+      Αφήστε κενά τον οδηγό (driver) και τη θύρα (port) για αυτόματη
+      αναγνώριση: ένα Tescom Prime στο USB παίρνει tescom_prime, τα άλλα UPS
+      στο USB usbhid-ups ή nutdrv_qx. Ένα Tescom Prime θέλει επίσης τον
+      σειριακό αριθμό του και τον κωδικό ενεργοποίησης από τη σελίδα του στο
+      myTescom (my.tescom.gr). Στο config μπαίνουν επιπλέον γραμμές του
+      ups.conf, π.χ. "lowbatt = 30".
+  cloud_url:
+    name: Διεύθυνση Tescom Connect
+    description: Μόνο για δοκιμές. Αφήστε το κενό.
+  username:
+    name: Όνομα χρήστη
+    description: Ο χρήστης NUT με τον οποίο συνδέεται το Home Assistant.
+  password:
+    name: Κωδικός
+    description: Ο κωδικός του χρήστη NUT. Υποχρεωτικός.
+  log_level:
+    name: Επίπεδο καταγραφής
+    description: Με debug ή trace οι οδηγοί και το upsd γράφουν και μηνύματα αποσφαλμάτωσης.
+network:
+  3493/tcp: Διακομιστής NUT (upsd)

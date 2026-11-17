@@ -1,0 +1,3 @@
+.DS_Store
+# The Prime simulator holds its register map: kept private (nut-app), copied here to run tests/e2e.
+tests/e2e/fakeprime.py

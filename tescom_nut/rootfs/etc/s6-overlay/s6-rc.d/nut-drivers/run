@@ -1,0 +1,41 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# Start a NUT driver for every UPS in ups.conf, and start it again whenever
+# it is not running (unplugged, UPS switched off, a driver that gave up).
+declare -A driver
+name=""
+while IFS= read -r line; do
+    if [[ "$line" =~ ^\[(.+)\]$ ]]; then
+        name="${BASH_REMATCH[1]}"
+    elif [[ -n "$name" && "$line" =~ ^[[:space:]]*driver[[:space:]]*=[[:space:]]*([^[:space:]]+) ]]; then
+        driver["$name"]="${BASH_REMATCH[1]}"
+    fi
+done < /etc/nut/ups.conf
+
+debug=()
+if bashio::config.has_value 'log_level'; then
+    case "$(bashio::config 'log_level')" in
+        trace) debug=(-D -D -D) ;;
+        debug) debug=(-D) ;;
+    esac
+fi
+
+running() { # name
+    local pidfile="/run/nut/${driver[$1]}-$1.pid"
+    [[ -f "$pidfile" ]] && kill -0 "$(cat "$pidfile")" 2>/dev/null
+}
+
+declare -A warned
+while true; do
+    for n in "${!driver[@]}"; do
+        running "$n" && { warned["$n"]=""; continue; }
+        if upsdrvctl "${debug[@]}" start "$n"; then
+            bashio::log.info "Driver ${driver[$n]} for ${n} started"
+            warned["$n"]=""
+        elif [[ -z "${warned[$n]:-}" ]]; then
+            bashio::log.warning "Driver ${driver[$n]} for ${n} did not start; trying again every 30 seconds"
+            warned["$n"]=1
+        fi
+    done
+    sleep 30
+done

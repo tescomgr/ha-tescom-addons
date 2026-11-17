@@ -1,0 +1,15 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# Tell Home Assistant about the NUT server, so the built-in
+# Network UPS Tools integration offers itself under Settings > Devices.
+config=$(bashio::var.json \
+    host "$(bashio::app.hostname)" \
+    port "^3493" \
+    username "$(bashio::config 'username')" \
+    password "$(bashio::config 'password')" \
+)
+if bashio::discovery "nut" "${config}" > /dev/null; then
+    bashio::log.info "Sent the NUT discovery to Home Assistant"
+else
+    bashio::log.warning "Could not send the NUT discovery; add the Network UPS Tools integration by hand"
+fi
