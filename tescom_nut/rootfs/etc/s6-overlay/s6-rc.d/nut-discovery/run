@@ -9,7 +9,7 @@ config=$(bashio::var.json \
     password "$(bashio::config 'password')" \
 )
 if bashio::discovery "nut" "${config}" > /dev/null; then
-    bashio::log.info "Sent the NUT discovery to Home Assistant"
+    bashio::log.info "Sent the NUT discovery to Home Assistant. No card under Settings > Devices & services? Home Assistant shows one NUT card at a time: ignore any other NUT card, or add Network UPS Tools by hand (host localhost, port 3493)"
 else
     bashio::log.warning "Could not send the NUT discovery; add the Network UPS Tools integration by hand"
 fi

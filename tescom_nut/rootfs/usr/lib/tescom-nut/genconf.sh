@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Write NUT's ups.conf, upsd.conf and upsd.users from the add-on options.
 #
-#   genconf.sh OPTIONS_JSON CONF_DIR
+#   genconf.sh OPTIONS_JSON CONF_DIR [DATA_DIR]
 #
 # Plain bash and jq, no bashio, so it can be tested outside Home Assistant.
 # SYSFS (default /sys) and DEV (default /dev) can point elsewhere for tests.
@@ -11,13 +11,24 @@
 #   Megatec-style USB bridges                   nutdrv_qx, port auto
 #   USB HID power devices of known UPS makers   usbhid-ups, port auto
 # A device with a blank port and a blank driver takes the next UPS found.
+#
+# Tescom's profiles (profiles.sh) add the settings each model needs. The
+# Leo LCD, Leo SmartBox and Neoline share one USB bridge (0001:0000), so for
+# those the model is told from the running driver's reading (identify.sh);
+# the model found last is kept in DATA_DIR/models/<name> and used at once.
+# Each such UPS is listed in CONF_DIR/identify. A key the device's `config`
+# sets is never added: the user's setting wins.
 
 set -euo pipefail
 
 OPTIONS="${1:-/data/options.json}"
 CONF="${2:-/etc/nut}"
+DATA="${3:-/data}"
 SYSFS="${SYSFS:-/sys}"
 DEV="${DEV:-/dev}"
+
+# shellcheck source=SCRIPTDIR/profiles.sh
+. "$(dirname "$0")/profiles.sh"
 
 log() { printf '[tescom-nut] %s\n' "$*" >&2; }
 die() { log "ERROR: $*"; exit 1; }
@@ -102,6 +113,7 @@ used=()
 
 mkdir -p "$CONF"
 umask 027
+: >"$CONF/identify.new"
 
 {
 	echo "# Written by the Tescom NUT add-on at start-up; edits are lost."
@@ -153,22 +165,53 @@ for ((i = 0; i < count; i++)); do
 		esac
 	fi
 
+	extra="$(jq -r ".devices[$i].config // [] | .[] | select(. != null and . != \"\")" "$OPTIONS")"
+	# The USB ID, also when the config lines give it.
+	vid="$vendorid" pid="$productid"
+	while IFS= read -r line; do
+		case "$(conf_key "$line")" in
+			vendorid) vid="$(tr -d ' "' <<<"${line#*=}" | tr 'A-F' 'a-f')" ;;
+			productid) pid="$(tr -d ' "' <<<"${line#*=}" | tr 'A-F' 'a-f')" ;;
+		esac
+	done <<<"$extra"
+
+	base=""      # settings that come before the user's
+	model=""     # the profile whose settings come after them
+	identify=""  # the model is told from the reading
+	case "$driver" in
+		nutdrv_qx)
+			if [ "$vid:$pid" = "0001:0000" ]; then
+				base="$(printf '%s\n' "${HUNNOX_BASE[@]}")"
+				identify=1
+				model="$(cat "$DATA/models/$name" 2>/dev/null || true)"
+				case "$model" in leo|smartbox|neoline) ;; *) model="" ;; esac
+			fi
+			;;
+		nutdrv_qx_mec) model=lion ;;
+		tescom_prime) model=prime ;;
+	esac
+
 	{
 		echo
 		echo "[$name]"
 		echo "  driver = $driver"
-		echo "  port = $port"
+		echo "  port = $(conf_line "port = $port" | sed 's/^port = //')"
 		[ -z "$vendorid" ] || echo "  vendorid = $vendorid"
 		[ -z "$productid" ] || echo "  productid = $productid"
-		extra="$(jq -r ".devices[$i].config // [] | .[] | select(. != null and . != \"\")" "$OPTIONS")"
-		if [ "$driver" = "nutdrv_qx_mec" ]; then
-			# The Tescom LiON RT's MEC0003 bridge (nut-app deploy/README.md).
-			for kv in "subdriver = krauler" "protocol = megatec" "langid_fix = 0x0409"; do
-				grep -qE "^[[:space:]]*${kv%% *}[[:space:]]*=" <<<"$extra" || echo "  $kv"
-			done
+		settings_not_in "$extra" "$base"
+		while IFS= read -r line; do
+			[ -z "$line" ] || printf '  %s\n' "$(conf_line "$line")"
+		done <<<"$extra"
+		if [ -n "$identify" ] || [ -n "$model" ]; then
+			# identify.sh replaces what follows this line.
+			echo "  # Tescom profile: ${model:-unknown}"
+			[ -z "$model" ] || settings_not_in "$extra" "$(profile_settings "$model")"
 		fi
-		[ -z "$extra" ] || sed 's/^/  /' <<<"$extra"
 	} >>"$CONF/ups.conf.new"
+	if [ -n "$identify" ]; then
+		echo "$name" >>"$CONF/identify.new"
+		log "device $name: ${model:+the $model profile, as found last time; }the model is checked once the driver runs"
+	fi
 done
 
 cat >"$CONF/upsd.conf.new" <<EOF
@@ -187,7 +230,7 @@ cat >"$CONF/upsd.users.new" <<EOF
   upsmon primary
 EOF
 
-for f in ups.conf upsd.conf upsd.users; do
+for f in ups.conf upsd.conf upsd.users identify; do
 	mv -f "$CONF/$f.new" "$CONF/$f"
 done
 chmod 0640 "$CONF/upsd.users"

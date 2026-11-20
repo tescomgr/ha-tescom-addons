@@ -1,6 +1,6 @@
 # https://developers.home-assistant.io/docs/add-ons/configuration
 name: Tescom NUT
-version: "2.8.4-1"
+version: "2.8.4-2"
 slug: tescom_nut
 description: Network UPS Tools for Tescom UPSs on USB (Prime, LiON RT, Leo, others)
 url: "https://github.com/tescomgr/ha-tescom-addons/tree/main/tescom_nut"

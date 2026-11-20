@@ -38,6 +38,40 @@ UPS's status, battery and load, and can run its tests.
    - Port: `3493`
    - Username and password: the ones from step 5.
 
+   No card? Add it by hand: **Add integration** > **Network UPS Tools
+   (NUT)**, with the same host, port, username and password. Home Assistant
+   shows only one NUT card at a time, and none once a NUT server is set up:
+   another NUT card (often an old or unreachable NUT server on your network)
+   hides this add-on's. Ignore that card, restart the add-on, and its card
+   appears.
+
+## Tescom Leo SmartBox, Leo LCD and Neoline
+
+Nothing to configure: leave `driver`, `port` and `config` blank. The three
+share one USB chip, so the add-on starts the UPS with the settings they have
+in common, reads it, tells the model from its battery (12 V: SmartBox, 24 V:
+Leo LCD) or its type (on-line: Neoline), and restarts it once with that
+model's settings and its name. The log says:
+
+```text
+[tescom-nut] UPS ups: identified as Tescom Leo SmartBox; restarting its driver with that model's settings
+```
+
+The model is remembered, so later starts use its settings at once.
+
+These UPSs do not report their battery charge: NUT estimates it from the
+battery voltage. On mains the battery is kept above "full", so the charge
+reads 100% until the UPS has been on battery for a while; treat it as a
+rough guide.
+
+## Sensors in Home Assistant
+
+The integration adds the main sensors (status, battery charge, load, input
+voltage). Others, such as battery voltage and temperature, are created
+disabled. To show them: Settings > Devices & services > Network UPS Tools >
+the UPS's device > the **Entities** list (or the integration's
+**Entities** tab), select the ones you want, then **Enable selected**.
+
 ## Activation (Tescom Prime)
 
 The Prime's driver is not part of the add-on: Tescom Connect gives it to
@@ -79,8 +113,12 @@ One entry per UPS. `name` is the UPS's NUT name (`ups@localhost`).
 - `driver` and `port` both set: used as given.
 - `serial` and `activation_code`: a Tescom Prime's, from myTescom.
 - `config`: extra `ups.conf` lines for this UPS, e.g. `lowbatt = 30`.
+  A setting given here replaces the add-on's own for that key. Values with
+  spaces are fine as they are: the add-on quotes them
+  (`override.ups.model = My UPS`).
 
-Tescom LiON RT:
+Tescom LiON RT (its USB chip is the same as the Leo's, so it needs setting
+by hand):
 
 ```yaml
 devices:
@@ -92,8 +130,8 @@ devices:
       - productid = 0000
 ```
 
-The add-on adds `subdriver = krauler`, `protocol = megatec` and
-`langid_fix = 0x0409` unless `config` sets them.
+The add-on adds the LiON's settings (`subdriver = krauler`, `protocol =
+megatec`, its battery pack, make and model) unless `config` sets them.
 
 ### `tescom_prime` settings
 

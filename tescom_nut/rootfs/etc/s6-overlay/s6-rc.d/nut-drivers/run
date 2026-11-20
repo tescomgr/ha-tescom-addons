@@ -25,17 +25,58 @@ running() { # name
     [[ -f "$pidfile" ]] && kill -0 "$(cat "$pidfile")" 2>/dev/null
 }
 
+# UPSs on the shared Tescom bridge whose model is told from the reading
+# (identify.sh): checked every 5 seconds once their driver runs, for up to
+# 5 minutes, then left as they are.
+declare -A pending
+if [[ -f /etc/nut/identify ]]; then
+    while IFS= read -r n; do
+        [[ -n "$n" ]] && pending["$n"]=60
+    done < /etc/nut/identify
+fi
+
+identify() { # name
+    local rc=0
+    /usr/lib/tescom-nut/identify.sh "$1" /data/options.json /etc/nut /data || rc=$?
+    case "$rc" in
+        0) unset 'pending[$1]' ;;
+        10)
+            unset 'pending[$1]'
+            upsdrvctl stop "$1" || true
+            # upsd reads the new description on SIGHUP.
+            s6-svc -h /run/service/upsd 2>/dev/null || true
+            if upsdrvctl "${debug[@]}" start "$1"; then
+                bashio::log.info "Driver ${driver[$1]} for ${1} restarted with its model's settings"
+            fi
+            ;;
+        *)
+            pending["$1"]=$(( ${pending[$1]} - 1 ))
+            if (( pending[$1] <= 0 )); then
+                unset 'pending[$1]'
+                bashio::log.warning "UPS ${1}: no reading to tell its model from; NUT's own settings are used"
+            fi
+            ;;
+    esac
+}
+
 declare -A warned
+next=0
 while true; do
-    for n in "${!driver[@]}"; do
-        running "$n" && { warned["$n"]=""; continue; }
-        if upsdrvctl "${debug[@]}" start "$n"; then
-            bashio::log.info "Driver ${driver[$n]} for ${n} started"
-            warned["$n"]=""
-        elif [[ -z "${warned[$n]:-}" ]]; then
-            bashio::log.warning "Driver ${driver[$n]} for ${n} did not start; trying again every 30 seconds"
-            warned["$n"]=1
-        fi
+    if (( SECONDS >= next )); then
+        for n in "${!driver[@]}"; do
+            running "$n" && { warned["$n"]=""; continue; }
+            if upsdrvctl "${debug[@]}" start "$n"; then
+                bashio::log.info "Driver ${driver[$n]} for ${n} started"
+                warned["$n"]=""
+            elif [[ -z "${warned[$n]:-}" ]]; then
+                bashio::log.warning "Driver ${driver[$n]} for ${n} did not start; trying again every 30 seconds"
+                warned["$n"]=1
+            fi
+        done
+        next=$(( SECONDS + 30 ))
+    fi
+    for n in "${!pending[@]}"; do
+        running "$n" && identify "$n"
     done
-    sleep 30
+    sleep 5
 done
